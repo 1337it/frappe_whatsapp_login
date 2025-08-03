@@ -19,17 +19,17 @@ def send_whatsapp_message(number, otp):
     token = frappe.db.get_single_value("WhatsApp Settings", "token")
     phone_id = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
     
-    url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
+    url = f"https://graph.facebook.com/v17.0/{phone_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
     payload = {
         "messaging_product": "whatsapp",
-        "to": number,  # e.g. +971500000000
+        "to": number,
         "type": "template",
         "template": {
-            "name": "otp_login",  # Change to your approved template name
+            "name": "otp_login",  # Your approved template name
             "language": {"code": "en"},
             "components": [
                 {
@@ -43,11 +43,8 @@ def send_whatsapp_message(number, otp):
     }
 
     res = requests.post(url, json=payload, headers=headers)
-    try:
-        return res.json()
-    except:
-        return {"error": res.text}
-
+    frappe.logger().info(res.text)  # Logs response in bench
+    return res.json()
 
 @frappe.whitelist(allow_guest=True)
 def verify_otp(number, otp):
