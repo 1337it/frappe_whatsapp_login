@@ -10,8 +10,14 @@ def send_otp(number):
     otp = str(random.randint(100000, 999999))
     frappe.cache().set_value(f"otp_{number}", otp, expires_in_sec=300)  # 5 mins
 
-    res = send_whatsapp_message(number, otp)
-    return {"status": "success", "message": "OTP sent", "response": res}
+    # Capture actual WhatsApp response
+    api_response = send_whatsapp_message(number, otp)
+    
+    return {
+        "status": "success",
+        "message": "OTP sent",
+        "whatsapp_response": api_response
+    }
 
 
 def send_whatsapp_message(number, otp):
