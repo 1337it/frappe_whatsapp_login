@@ -44,19 +44,17 @@ def send_whatsapp_message(number, otp):
                         {"type": "text", "text": otp}
                     ]
                 },
-                {
-                      "type": "footer"
-                },
-                { 
-                      "type": "buttons",
-                      "buttons": [
-                        {
-                              "type": "otp",
-                              "otp_type": "copy_code",
-                              "text": "Copy code"
-                        }
-                      ]
-                }
+    {
+        "type": "button",
+        "sub_type": "url",
+        "index": "0",
+        "parameters": [
+          {
+            "type": "text",
+            "text": otp
+          }
+        ]
+      }
             ]
         }
     }
