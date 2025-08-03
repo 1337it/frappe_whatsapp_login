@@ -5,7 +5,7 @@ app_description = "WhatsApp OTP-based login for Frappe"
 app_email = "aman@leetitsolutions.com"
 app_version = "0.0.1"
 
-page_js = {
+app_include_js = {
     "login": "public/js/login_whatsapp.js"
 }
 app_include_css = []
