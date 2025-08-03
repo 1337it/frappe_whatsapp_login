@@ -19,13 +19,13 @@ def send_otp(number):
         "whatsapp_response": api_response
     }
 
-
+@frappe.whitelist(allow_guest=True)
 def send_whatsapp_message(number, otp):
     """Send OTP using WhatsApp Template Message (Cloud API)"""
     token = frappe.db.get_single_value("WhatsApp Settings", "token")
     phone_id = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
     
-    url = f"https://graph.facebook.com/v17.0/{phone_id}/messages"
+    url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
