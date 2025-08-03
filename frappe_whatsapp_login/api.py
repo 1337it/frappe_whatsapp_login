@@ -18,7 +18,7 @@ def send_whatsapp_message(number, message):
     token = frappe.db.get_single_value("WhatsApp Settings", "token")
     phone_id = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
     
-    url = f"https://graph.facebook.com/v17.0/{phone_id}/messages"
+    url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
     payload = {
         "messaging_product": "whatsapp",
         "to": number,
