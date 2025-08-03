@@ -7,6 +7,15 @@ app_version = "0.0.1"
 
 app_include_js = []
 app_include_css = []
+
+web_include_js = []
+web_include_css = []
+
+# No doctype assets either
+doctype_js = {}
+doctype_list_js = {}
+doctype_tree_js = {}
+doctype_calendar_js = {}
 # Expose APIs
 override_whitelisted_methods = {
     # None yet
