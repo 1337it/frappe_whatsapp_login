@@ -10,23 +10,44 @@ def send_otp(number):
     otp = str(random.randint(100000, 999999))
     frappe.cache().set_value(f"otp_{number}", otp, expires_in_sec=300)  # 5 mins
 
-    send_whatsapp_message(number, f"Your OTP is {otp}. Valid for 5 mins.")
-    return {"status": "success", "message": "OTP sent"}
+    res = send_whatsapp_message(number, otp)
+    return {"status": "success", "message": "OTP sent", "response": res}
 
-def send_whatsapp_message(number, message):
-    """Use WhatsApp Cloud API"""
+
+def send_whatsapp_message(number, otp):
+    """Send OTP using WhatsApp Template Message (Cloud API)"""
     token = frappe.db.get_single_value("WhatsApp Settings", "token")
     phone_id = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
     
-    url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
+    url = f"https://graph.facebook.com/v17.0/{phone_id}/messages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
     payload = {
         "messaging_product": "whatsapp",
-        "to": number,
-        "type": "text",
-        "text": {"body": message},
+        "to": number,  # e.g. +971500000000
+        "type": "template",
+        "template": {
+            "name": "otp_login",  # Change to your approved template name
+            "language": {"code": "en"},
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [
+                        {"type": "text", "text": otp}
+                    ]
+                }
+            ]
+        }
     }
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    requests.post(url, json=payload, headers=headers)
+
+    res = requests.post(url, json=payload, headers=headers)
+    try:
+        return res.json()
+    except:
+        return {"error": res.text}
+
 
 @frappe.whitelist(allow_guest=True)
 def verify_otp(number, otp):
@@ -39,7 +60,7 @@ def verify_otp(number, otp):
     if not user:
         return {"status": "error", "message": "User not found"}
 
-    # Login user
+    # Log in user
     frappe.local.login_manager.user = user
     frappe.local.login_manager.post_login()
     frappe.db.commit()
