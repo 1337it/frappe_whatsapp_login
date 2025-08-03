@@ -15,7 +15,7 @@ def send_otp(number):
 
 def send_whatsapp_message(number, message):
     """Use WhatsApp Cloud API"""
-    token = frappe.db.get_single_value("WhatsApp Settings", "api_token")
+    token = frappe.db.get_single_value("WhatsApp Settings", "token")
     phone_id = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
     
     url = f"https://graph.facebook.com/v17.0/{phone_id}/messages"
