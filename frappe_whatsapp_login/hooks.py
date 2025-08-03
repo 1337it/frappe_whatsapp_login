@@ -9,7 +9,7 @@ app_version = "0.0.1"
 override_whitelisted_methods = {
     # None yet
 }
-
+after_install = "frappe_whatsapp_login.install.after_install"
 # Optional: Add web templates
 website_route_rules = [
     {"from_route": "/whatsapp-login", "to_route": "whatsapp_login"},
