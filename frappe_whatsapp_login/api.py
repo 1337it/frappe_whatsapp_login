@@ -33,7 +33,7 @@ def send_otp(number):
     # Lookup user by any format stored in DB
     user = frappe.db.get_value(
         "User",
-        {"whatsapp_number": ["in", [number, normalized_number]]},
+        {"whatsapp_number": normalized_number},
         ["name"],
         as_dict=True
     )
