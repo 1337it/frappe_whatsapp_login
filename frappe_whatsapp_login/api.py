@@ -1,28 +1,63 @@
-import frappe, random, requests
+import frappe, random, requests, re
+
+def normalize_phone(number: str) -> str:
+    """Normalize phone number to E.164 format for WhatsApp"""
+    # Remove spaces, dashes, parentheses
+    number = re.sub(r'\D', '', number)
+
+    # Rule 1: Starts with + → leave as is
+    if number.startswith('+'):
+        return number
+
+    # Rule 2: Starts with 00 → replace with +
+    if number.startswith('00'):
+        return f"+{number[2:]}"
+
+    # Rule 3: UAE local starting with 0 → remove 0 and prepend +971
+    if number.startswith('0'):
+        return f"+971{number[1:]}"
+
+    # Rule 4: Starts with 971 → prepend +
+    if number.startswith('971'):
+        return f"+{number}"
+
+    # Fallback: just prepend +
+    return f"+{number}"
+
 
 @frappe.whitelist(allow_guest=True)
 def send_otp(number):
     """Send OTP to WhatsApp number"""
-    user = frappe.db.get_value("User", {"whatsapp_number": number}, ["name"], as_dict=True)
+    normalized_number = normalize_phone(number)
+
+    # Lookup user by any format stored in DB
+    user = frappe.db.get_value(
+        "User",
+        {"whatsapp_number": ["in", [number, normalized_number]]},
+        ["name"],
+        as_dict=True
+    )
     if not user:
         return {"status": "error", "message": "Number not registered"}
 
     otp = str(random.randint(100000, 999999))
-    frappe.cache().set_value(f"otp_{number}", otp, expires_in_sec=300)  # 5 mins
+    frappe.cache().set_value(f"otp_{normalized_number}", otp, expires_in_sec=300)  # 5 mins
 
     # Capture actual WhatsApp response
-    api_response = send_whatsapp_message(number, otp)
-    
+    api_response = send_whatsapp_message(normalized_number, otp)
+
     return {
         "status": "success",
         "message": "OTP sent",
+        "normalized_number": normalized_number,
         "whatsapp_response": api_response
     }
+
 
 @frappe.whitelist(allow_guest=True)
 def send_whatsapp_message(number, otp):
     """Send OTP using WhatsApp Template Message (Cloud API)"""
-    token = "EAAL7yywuWlMBO7NTZCrUE7PQeIdEkYYxtBfZCp3ADJtSdDFbsLZBhOJfkoAo78zLdY7YvMjPPxWJ8bZALddZCdB3wuQDOQO2XO9rVmyLE6tRZB0AWlRSw70tV2hFJGK8TGaMEt7J64LiZBwoMIxeRaJlbGPGOq78lhUVXFLqOBUv0gfyaLP5o1VO1HMGfZCWTW3SHKId6SPPlIKFdkjn"
+    token = frappe.db.get_single_value("WhatsApp Settings", "token")
     phone_id = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
     
     url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
@@ -32,10 +67,10 @@ def send_whatsapp_message(number, otp):
     }
     payload = {
         "messaging_product": "whatsapp",
-        "to": number,
+        "to": number,  # Always normalized
         "type": "template",
         "template": {
-            "name": "otp_login",  # Your approved template name
+            "name": "otp_login",  # Your approved template
             "language": {"code": "en"},
             "components": [
                 {
@@ -43,34 +78,33 @@ def send_whatsapp_message(number, otp):
                     "parameters": [
                         {"type": "text", "text": otp}
                     ]
-                },
-    {
-        "type": "button",
-        "sub_type": "url",
-        "index": "0",
-        "parameters": [
-          {
-            "type": "text",
-            "text": otp
-          }
-        ]
-      }
+                }
             ]
         }
     }
 
     res = requests.post(url, json=payload, headers=headers)
     frappe.logger().info(res.text)  # Logs response in bench
-    return res.json()
+    try:
+        return res.json()
+    except:
+        return {"error": res.text}
+
 
 @frappe.whitelist(allow_guest=True)
 def verify_otp(number, otp):
     """Verify OTP and log user in"""
-    saved_otp = frappe.cache().get_value(f"otp_{number}")
+    normalized_number = normalize_phone(number)
+
+    saved_otp = frappe.cache().get_value(f"otp_{normalized_number}")
     if not saved_otp or saved_otp != otp:
         return {"status": "error", "message": "Invalid or expired OTP"}
 
-    user = frappe.db.get_value("User", {"whatsapp_number": number}, ["name"])
+    user = frappe.db.get_value(
+        "User",
+        {"whatsapp_number": ["in", [number, normalized_number]]},
+        ["name"]
+    )
     if not user:
         return {"status": "error", "message": "User not found"}
 
