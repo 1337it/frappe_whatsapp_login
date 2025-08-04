@@ -127,7 +127,7 @@ def send_network_alert(number, name, mac):
     elif not number.startswith("+"):
         number = "+" + number
 
-    url = f"https://graph.facebook.com/v19.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
+    url = f"https://graph.facebook.com/v22.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
     headers = {
         "Authorization": f"Bearer {META_ACCESS_TOKEN}",
         "Content-Type": "application/json"
