@@ -113,3 +113,31 @@ def verify_otp(number, otp):
     frappe.local.login_manager.post_login()
     frappe.db.commit()
     return {"status": "success", "message": "Login successful"}
+    
+@frappe.whitelist(allow_guest=True)
+def send_network_alert(number, message):
+    """
+    Send WhatsApp message to the given number.
+    Example: Called from Orange Pi network scanner.
+    """
+    # Format number if needed
+    if number.startswith("00"):
+        number = "+" + number[2:]
+    elif not number.startswith("+"):
+        number = "+" + number
+
+    # Use your existing WhatsApp sending logic here
+    try:
+        # Example: insert a WhatsApp Message doc if your app uses that
+        doc = frappe.get_doc({
+            "doctype": "WhatsApp Message",
+            "receiver": number,
+            "message": message
+        })
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        return {"status": "success", "message": f"WhatsApp sent to {number}"}
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "WhatsApp Send Error")
+        return {"status": "error", "message": str(e)}
