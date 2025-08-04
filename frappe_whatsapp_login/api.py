@@ -113,31 +113,49 @@ def verify_otp(number, otp):
     frappe.local.login_manager.post_login()
     frappe.db.commit()
     return {"status": "success", "message": "Login successful"}
-    
+
 @frappe.whitelist(allow_guest=True)
-def send_network_alert(number, message):
+def send_network_alert(number, name, mac):
     """
-    Send WhatsApp message to the given number.
-    Example: Called from Orange Pi network scanner.
+    Sends WhatsApp Template message via Meta Cloud API.
     """
-    # Format number if needed
+    META_ACCESS_TOKEN = frappe.db.get_single_value("WhatsApp Settings", "token")
+    WHATSAPP_PHONE_NUMBER_ID = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
+    TEMPLATE_NAME = "device_alert"
     if number.startswith("00"):
         number = "+" + number[2:]
     elif not number.startswith("+"):
         number = "+" + number
 
-    # Use your existing WhatsApp sending logic here
-    try:
-        # Example: insert a WhatsApp Message doc if your app uses that
-        doc = frappe.get_doc({
-            "doctype": "WhatsApp Message",
-            "receiver": number,
-            "message": message
-        })
-        doc.insert(ignore_permissions=True)
-        frappe.db.commit()
+    url = f"https://graph.facebook.com/v19.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
+    headers = {
+        "Authorization": f"Bearer {META_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
 
-        return {"status": "success", "message": f"WhatsApp sent to {number}"}
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": number,
+        "type": "template",
+        "template": {
+            "name": TEMPLATE_NAME,
+            "language": {"code": "en"},
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": [
+                        {"type": "text", "text": name},
+                        {"type": "text", "text": mac}
+                    ]
+                }
+            ]
+        }
+    }
+
+    try:
+        r = requests.post(url, headers=headers, json=payload)
+        r.raise_for_status()
+        return {"status": "success", "response": r.json()}
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "WhatsApp Send Error")
+        frappe.log_error(frappe.get_traceback(), "Meta WhatsApp Send Error")
         return {"status": "error", "message": str(e)}
