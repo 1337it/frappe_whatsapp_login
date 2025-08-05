@@ -78,6 +78,11 @@ def send_whatsapp_message(number, otp):
                     "parameters": [
                         {"type": "text", "text": otp}
                     ]
+                },
+                {
+                      "type": "button",
+                      "sub_type": "url",
+                      "index": "0"
                 }
             ]
         }
