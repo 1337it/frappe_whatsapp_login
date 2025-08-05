@@ -33,7 +33,7 @@ def send_otp(number):
     # Lookup user by any format stored in DB
     user = frappe.db.get_value(
         "User",
-        {"whatsapp_number": normalized_number},
+        {"whatsapp_number": number},
         ["name"],
         as_dict=True
     )
@@ -41,15 +41,15 @@ def send_otp(number):
         return {"status": "error", "message": "Number not registered"}
 
     otp = str(random.randint(100000, 999999))
-    frappe.cache().set_value(f"otp_{normalized_number}", otp, expires_in_sec=300)  # 5 mins
+    frappe.cache().set_value(f"otp_{number}", otp, expires_in_sec=300)  # 5 mins
 
     # Capture actual WhatsApp response
-    api_response = send_whatsapp_message(normalized_number, otp)
+    api_response = send_whatsapp_message(number, otp)
 
     return {
         "status": "success",
         "message": "OTP sent",
-        "normalized_number": normalized_number,
+        "normalized_number": number,
         "whatsapp_response": api_response
     }
 
@@ -105,15 +105,15 @@ def send_whatsapp_message(number, otp):
 @frappe.whitelist(allow_guest=True)
 def verify_otp(number, otp):
     """Verify OTP and log user in"""
-    normalized_number = normalize_phone(number)
+    normalized_number = number
 
-    saved_otp = frappe.cache().get_value(f"otp_{normalized_number}")
+    saved_otp = frappe.cache().get_value(f"otp_{number}")
     if not saved_otp or saved_otp != otp:
         return {"status": "error", "message": "Invalid or expired OTP"}
 
     user = frappe.db.get_value(
         "User",
-        {"whatsapp_number": ["in", [number, normalized_number]]},
+        {"whatsapp_number": number},
         ["name"]
     )
     if not user:
