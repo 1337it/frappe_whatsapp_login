@@ -114,16 +114,16 @@ def verify_otp(number, otp):
     frappe.db.commit()
     return {"status": "success", "message": "Login successful"}
 
-META_ACCESS_TOKEN = frappe.db.get_single_value("WhatsApp Settings", "token")
-WHATSAPP_PHONE_NUMBER_ID = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
-TEMPLATE_NAME = "device_alert"  # Your approved template
-
 @frappe.whitelist(allow_guest=True)
 def send_network_alert(number, name, mac):
     """
     Send WhatsApp template message to employee when device appears on network.
     """
     # Clean number
+    META_ACCESS_TOKEN = frappe.db.get_single_value("WhatsApp Settings", "token")
+    WHATSAPP_PHONE_NUMBER_ID = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
+    TEMPLATE_NAME = "device_alert"  # Your approved template
+    
     number = number.replace(" ", "").replace("-", "")
     if number.startswith("00"):
         number = "+" + number[2:]
