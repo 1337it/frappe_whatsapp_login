@@ -57,7 +57,7 @@ def send_otp(number):
 @frappe.whitelist(allow_guest=True)
 def send_whatsapp_message(number, otp):
     """Send OTP using WhatsApp Template Message (Cloud API)"""
-    token = frappe.db.get_single_value("WhatsApp Settings", "token")
+    token = "EAAL7yywuWlMBO7NTZCrUE7PQeIdEkYYxtBfZCp3ADJtSdDFbsLZBhOJfkoAo78zLdY7YvMjPPxWJ8bZALddZCdB3wuQDOQO2XO9rVmyLE6tRZB0AWlRSw70tV2hFJGK8TGaMEt7J64LiZBwoMIxeRaJlbGPGOq78lhUVXFLqOBUv0gfyaLP5o1VO1HMGfZCWTW3SHKId6SPPlIKFdkjn"
     phone_id = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
     
     url = f"https://graph.facebook.com/v22.0/{phone_id}/messages"
@@ -120,7 +120,7 @@ def send_network_alert(number, name, mac):
     Send WhatsApp template message to employee when device appears on network.
     """
     # Clean number
-    META_ACCESS_TOKEN = frappe.db.get_single_value("WhatsApp Settings", "token")
+    META_ACCESS_TOKEN = "EAAL7yywuWlMBO7NTZCrUE7PQeIdEkYYxtBfZCp3ADJtSdDFbsLZBhOJfkoAo78zLdY7YvMjPPxWJ8bZALddZCdB3wuQDOQO2XO9rVmyLE6tRZB0AWlRSw70tV2hFJGK8TGaMEt7J64LiZBwoMIxeRaJlbGPGOq78lhUVXFLqOBUv0gfyaLP5o1VO1HMGfZCWTW3SHKId6SPPlIKFdkjn"
     WHATSAPP_PHONE_NUMBER_ID = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
     TEMPLATE_NAME = "device_alert"  # Your approved template
     
