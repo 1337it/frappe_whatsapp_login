@@ -28,7 +28,7 @@ def normalize_phone(number: str) -> str:
 @frappe.whitelist(allow_guest=True)
 def send_otp(number):
     """Send OTP to WhatsApp number"""
-    normalized_number = normalize_phone(number)
+    normalized_number = number
 
     # Lookup user by any format stored in DB
     user = frappe.db.get_value(
