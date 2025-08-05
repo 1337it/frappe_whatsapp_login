@@ -114,14 +114,17 @@ def verify_otp(number, otp):
     frappe.db.commit()
     return {"status": "success", "message": "Login successful"}
 
+META_ACCESS_TOKEN = frappe.db.get_single_value("WhatsApp Settings", "token")
+WHATSAPP_PHONE_NUMBER_ID = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
+TEMPLATE_NAME = "device_alert"  # Your approved template
+
 @frappe.whitelist(allow_guest=True)
 def send_network_alert(number, name, mac):
     """
-    Sends WhatsApp Template message via Meta Cloud API.
+    Send WhatsApp template message to employee when device appears on network.
     """
-    META_ACCESS_TOKEN = frappe.db.get_single_value("WhatsApp Settings", "token")
-    WHATSAPP_PHONE_NUMBER_ID = frappe.db.get_single_value("WhatsApp Settings", "phone_id")
-    TEMPLATE_NAME = "device_alert"
+    # Clean number
+    number = number.replace(" ", "").replace("-", "")
     if number.startswith("00"):
         number = "+" + number[2:]
     elif not number.startswith("+"):
@@ -153,9 +156,9 @@ def send_network_alert(number, name, mac):
     }
 
     try:
-        r = requests.post(url, headers=headers, json=payload)
+        r = requests.post(url, headers=headers, json=payload, timeout=15)
         r.raise_for_status()
         return {"status": "success", "response": r.json()}
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Meta WhatsApp Send Error")
+        frappe.log_error(frappe.get_traceback(), "WhatsApp Send Error")
         return {"status": "error", "message": str(e)}
